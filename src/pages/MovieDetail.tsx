@@ -106,16 +106,15 @@ const MovieDetail = () => {
                     className="w-full h-full object-cover opacity-50"
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <a 
-                      href="https://youtu.be/3c-iBn73dDE?si=pcfbYraOHd3txwoH" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
+                    <Button 
+                      variant="hero" 
+                      size="lg" 
+                      className="gap-2 text-lg px-8 py-6"
+                      onClick={() => window.open("https://youtu.be/3c-iBn73dDE?si=pcfbYraOHd3txwoH", "_blank")}
                     >
-                      <Button variant="hero" size="lg" className="gap-2 text-lg px-8 py-6">
-                        <Play className="h-6 w-6" />
-                        Play Movie
-                      </Button>
-                    </a>
+                      <Play className="h-6 w-6" />
+                      Play Movie
+                    </Button>
                   </div>
                 </div>
 

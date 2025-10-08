@@ -5,77 +5,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { User, Session } from "@supabase/supabase-js";
+import { Film } from "lucide-react";
 
 const Auth = () => {
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          navigate("/");
-        }
-      }
-    );
-
-    // THEN check for existing session
+    // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
+      if (session) {
         navigate("/");
       }
     });
-
-    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setLoading(true);
 
     try {
-      if (isSignUp) {
-        const redirectUrl = `${window.location.origin}/`;
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: redirectUrl,
-          },
-        });
-
-        if (error) throw error;
-
-        toast({
-          title: "Success!",
-          description: "Account created successfully. You can now sign in.",
-        });
-        setIsSignUp(false);
-      } else {
+      if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -85,13 +39,30 @@ const Auth = () => {
 
         toast({
           title: "Welcome back!",
-          description: "You've successfully signed in.",
+          description: "You have successfully logged in.",
         });
+        navigate("/");
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+          },
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Account created!",
+          description: "You can now log in with your credentials.",
+        });
+        setIsLogin(true);
       }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "An error occurred",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -103,15 +74,16 @@ const Auth = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gradient mb-2">
-            {isSignUp ? "Create Account" : "Welcome Back"}
-          </h1>
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Film className="h-10 w-10 text-primary" />
+            <h1 className="text-4xl font-bold text-gradient">CinemaHub</h1>
+          </div>
           <p className="text-muted-foreground">
-            {isSignUp ? "Sign up to start watching movies" : "Sign in to continue watching"}
+            {isLogin ? "Welcome back! Sign in to continue" : "Create an account to get started"}
           </p>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-6 shadow-lg">
+        <div className="bg-card border border-border rounded-lg p-6 card-hover">
           <form onSubmit={handleAuth} className="space-y-4">
             <div>
               <Label htmlFor="email">Email</Label>
@@ -121,8 +93,8 @@ const Auth = () => {
                 placeholder="your@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
                 required
+                className="mt-1"
               />
             </div>
 
@@ -134,31 +106,23 @@ const Auth = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
                 required
+                className="mt-1"
               />
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              variant="hero"
-              disabled={loading}
-            >
-              {loading ? "Loading..." : isSignUp ? "Sign Up" : "Sign In"}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
             </Button>
           </form>
 
           <div className="mt-4 text-center">
             <button
               type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-primary hover:underline text-sm"
-              disabled={loading}
+              onClick={() => setIsLogin(!isLogin)}
+              className="text-sm text-primary hover:underline"
             >
-              {isSignUp
-                ? "Already have an account? Sign in"
-                : "Don't have an account? Sign up"}
+              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
             </button>
           </div>
         </div>
